@@ -1,0 +1,30 @@
+{
+  "name": "helperpress-cli",
+  "version": "0.0.0",
+  "description": "The CLI client for HelperPress",
+  "main": "bin/hp",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:chuckmo/helperpress-cli.git"
+  },
+  "keywords": [
+    "WordPress"
+  ],
+  "author": "Charlie Rosenbury",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chuckmo/helperpress-cli/issues"
+  },
+  "preferGlobal": "true",
+  "bin": {
+    "hp": "./bin/hp.js"
+  },
+  "homepage": "https://github.com/chuckmo/helperpress-cli",
+  "dependencies": {
+    "commander": "^2.6.0",
+    "findup-sync": "^0.2.1"
+  }
+}
