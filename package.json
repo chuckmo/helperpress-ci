@@ -1,6 +1,6 @@
 {
   "name": "helperpress-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The CLI client for HelperPress",
   "main": "bin/hp",
   "scripts": {
@@ -26,5 +26,10 @@
   "dependencies": {
     "commander": "^2.6.0",
     "findup-sync": "^0.2.1"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-release": "^0.9.0",
+    "smartload-grunt-tasks": "^0.1.1"
   }
 }
