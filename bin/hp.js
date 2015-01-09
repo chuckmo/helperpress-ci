@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 
 var cli = require('commander'),
 	findup = require('findup-sync'),
@@ -11,8 +13,12 @@ var cli = require('commander'),
 var projectPath = findup( 'helperpress.json', { cwd: process.cwd(), nocase: true } );
 
 // if no helperpress.json file found, use CWD
-if(!projectPath)
+if(!projectPath){
 	projectPath = process.cwd();
+} else {
+	// strip filename
+	projectPath = projectPath.substring(0, projectPath.lastIndexOf('/')+1);
+}
 
 // mapping of HelperPress's Grunt tasks to commands we'll accept
 var taskWhitelist = {
@@ -20,25 +26,17 @@ var taskWhitelist = {
 		desc: 'Initialize a HelperPress project in the current directory.',
 		gruntTask: 'init_project'
 	},
-	'build': {
-		desc: 'Build a full WordPress install in current project.',
-		gruntTask: 'build_dist',
-		subTask: {
-			'dev': 'build_dev',
-			'dist': 'build_dist'
-		}
+	'build [type]': {
+		desc: 'Build a full WordPress install in current project.'
 	},
-	'migrate': {
-		desc: 'Migrate uploads or the WP database.',
-		gruntTask: 'migrate',
-		subTask: {
-			'uploads': 'migrate_uploads',
-			'db': 'migrate_db'
-		}
+	'pull [type] [environment]':{
+		desc: 'Pulls down the remote WP data type (db, uploads or both) from specified environment. [both] [_master]'
+	},
+	'push [type] [environment]':{
+		desc: 'Push up the remote WP data type (db, uploads or both) to specified environment. [both] [_master]'
 	},
 	'deploy': {
-		desc: 'Deploy current project.',
-		gruntTask: 'deploy'
+		desc: 'Deploy current project.'
 	}
 };
 
@@ -91,19 +89,53 @@ for(var opt in gruntOptionsWhitelist){
 // Set CLI version
 cli.version(pkg.version);
 
-// Loop through the task white list and register commands
-for(var cmd in taskWhitelist){
+// Set a list of CLI options to pass through to grunt
+cli.parseOptions(process.argv);
 
-	var cmdStr = cmd;
-
-	if(typeof taskWhitelist[cmd].subTask !== 'undefined')
-		cmdStr += ' [' + Object.keys(taskWhitelist[cmd].subTask).join('|') + ']';
-
-	cli
-	  .command(cmdStr)
-	  .description(taskWhitelist[cmd].desc)
-	  // .action(handleCommand);
+var gruntOpts = {};
+for(var opt in gruntOptionsWhitelist){
+	if(typeof cli[opt] !== 'undefined')
+		gruntOpts[opt] = cli[opt];
 }
 
+// Loop through the task white list and register HP tasks as commands
+for(var cmd in taskWhitelist){
+	cli
+	  .command(cmd)
+	  .description(taskWhitelist[cmd].desc)
+	  .action(getActionHandler(cmd));
+}
+
+// handle commands we haven't defined
+cli
+  .command('*')
+  .action(function(){
+    console.log("Command not found.");
+    cli.help();
+  });
+
+// Parse the CLI input and execute that beast
 cli.parse(process.argv);
 
+
+function getActionHandler(cmd){
+	return function(){
+	  	var gruntTask = [];
+
+	  	if(typeof taskWhitelist[cmd].gruntTask == 'string')
+	  		gruntTask.push(taskWhitelist[cmd].gruntTask);
+	  	else{
+	  		// loop through args and build grunt string
+	  		for(var arg in arguments){
+	  			if(typeof arguments[arg] == 'string' ){
+	  				gruntTask.push(arguments[arg]);
+	  			} else if (typeof arguments[arg] == 'object'){
+	  				// unshift the name of the main command
+	  				gruntTask.unshift(arguments[arg]._name);
+	  			}
+	  		}
+	  	}
+
+		runGrunt(gruntTask, gruntOpts, projectPath);
+	}
+}
