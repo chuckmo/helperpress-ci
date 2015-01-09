@@ -120,22 +120,22 @@ cli.parse(process.argv);
 
 function getActionHandler(cmd){
 	return function(){
-	  	var gruntTask = [];
+	  	var gruntTasks = [];
 
-	  	if(typeof taskWhitelist[cmd].gruntTask == 'string')
-	  		gruntTask.push(taskWhitelist[cmd].gruntTask);
+	  	if(typeof taskWhitelist[cmd].gruntTasks == 'string')
+	  		gruntTasks.push(taskWhitelist[cmd].gruntTasks);
 	  	else{
-	  		// loop through args and build grunt string
+	  		// loop through args and build grunt task arr
 	  		for(var arg in arguments){
 	  			if(typeof arguments[arg] == 'string' ){
-	  				gruntTask.push(arguments[arg]);
+	  				gruntTasks.push(arguments[arg]);
 	  			} else if (typeof arguments[arg] == 'object'){
 	  				// unshift the name of the main command
-	  				gruntTask.unshift(arguments[arg]._name);
+	  				gruntTasks.unshift(arguments[arg]._name);
 	  			}
 	  		}
 	  	}
 
-		runGrunt(gruntTask, gruntOpts, projectPath);
-	}
+		runGrunt(gruntTasks.join(':'), gruntOpts, projectPath);
+	};
 }
